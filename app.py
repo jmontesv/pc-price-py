@@ -28,45 +28,49 @@ driver = webdriver.Chrome(service=service, options=chrome_options)
 # Quitar la detección de WebDriver
 driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
 
-url = "https://www.pccomponentes.com/ordenador-sobremesa-pcm-trend-nexon-1-intel-core-i9-12900kf-32gb-1tb-ssd-rtx-4060"
-driver.get(url)
-
-time.sleep(10)
+url = "https://www.pccomponentes.com/ordenador-sobremesa-pccom-icue-intel-core-i5-13600kf-32gb-1tb-ssd-rtx-4060-ti"
 
 try:
-  cookies_button = WebDriverWait(driver, 5).until(
-    visibility_of_element_located((By.ID, "cookiesAcceptAll"))
-  )
-  cookies_button.click()
-  print("Cookies aceptadas automáticamente")
-except Exception as e:
-  print("Error al aceptar cookies")
+  driver.get(url)
 
+  time.sleep(10)
 
-def anadir_registro(date, name, price):
   try:
-    with open("precios.csv", "a") as f:
-      f.write(f"{date},{name},{price} \n")
+    cookies_button = WebDriverWait(driver, 5).until(
+      visibility_of_element_located((By.ID, "cookiesAcceptAll"))
+    )
+    cookies_button.click()
+    print("Cookies aceptadas automáticamente")
   except Exception as e:
-      print("No se creó el registro") 
+    print("Error al aceptar cookies")
 
 
-try:
-  soup = BeautifulSoup(driver.page_source, 'html.parser')
-  price_element = soup.find(id="pdp-price-current-integer") 
-  name_element = soup.find(id="pdp-title")
-  now = datetime.datetime.now().strftime("%d/%m/%Y")
-  print(name_element.text, price_element.text)
-
-  if os.path.exists("precios.csv"):
-   anadir_registro(now, name_element.text, price_element.text)
-  else:
+  def anadir_registro(date, name, price):
     try:
-      with open("precios.csv", "x") as f:
-        f.write(f"fecha,nombre,precio\n")
-      print("Archivo creado correctamente")
+      with open("precios.csv", "a") as f:
+        f.write(f"{date},{name},{price} \n")
+    except Exception as e:
+        print("No se creó el registro") 
+
+
+  try:
+    soup = BeautifulSoup(driver.page_source, 'html.parser')
+    price_element = soup.find(id="pdp-price-current-integer") 
+    name_element = soup.find(id="pdp-title")
+    now = datetime.datetime.now().strftime("%d/%m/%Y")
+    print(name_element.text, price_element.text)
+
+    if os.path.exists("precios.csv"):
       anadir_registro(now, name_element.text, price_element.text)
-    except FileExistsError:
-      print("El archivo ya existe") 
+    else:
+      try:
+        with open("precios.csv", "x") as f:
+          f.write(f"fecha,nombre,precio\n")
+        print("Archivo creado correctamente")
+        anadir_registro(now, name_element.text, price_element.text)
+      except FileExistsError:
+        print("El archivo ya existe") 
+  except Exception as e:
+    print("No se pudo obtener el precio", e)
 except Exception as e:
-  print("No se pudo obtener el precio", e)
+  print("Algo salió mal al abrir la página")
